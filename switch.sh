@@ -2,19 +2,19 @@
 set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-
 CONFIG=${SCRIPT_DIR}/config.yml
 
 hidapitester=${SCRIPT_DIR}/hidapitester.exe
 controlmymonitor=${SCRIPT_DIR}/ControlMyMonitor.exe
 
 configValue() {
-    valu=`yq $1 ${CONFIG}`
-    if [[ "${valu}" == "null" ]]; then
+    # yq config.yml -o json |  jq 'del(.logitech)'
+    local value=`yq "$1" ${CONFIG}`
+    if [[ "${value}" == "null" ]] || [[ "${value}" == "" ]]; then
         echo "Missing value '$1' in ${CONFIG}"  >&2
         exit -1
     fi
-    echo "${valu}"
+    echo "${value}"
 }
 
 
@@ -27,6 +27,7 @@ sendHidSwitchCommand() {
     local channelPrefix=$(configValue .${target}.logitech.${deviceType}.channelPrefix)
     local receiverChannel=$(configValue .${target}.logitech.receiver.channel)
 
+#set -x
     ${hidapitester} \
         --vidpid ${vidpid} \
         --usage 0x0001 \
@@ -34,6 +35,7 @@ sendHidSwitchCommand() {
         --open \
         --length 7 \
         --send-output 0x10,${deviceNumber},${channelPrefix},${receiverChannel},0x00,0x00
+#set +x
 }
 
 switchDisplayTo() {
@@ -56,32 +58,47 @@ switchEverything() {
     switchDisplayTo "${currentDisplay}" "${displayInput}"
 }
 
-host=$(hostname)
-if [[ "${host}" == "5CG1335TX4" ]]; then
-    source=work
-elif [[ "${host}" == "evan-asus" ]]; then
-    source=home
-else
-    echo Unable to determine host to switch to automatically. 
-    exit -1
+getSource() {
+    local hostname=$(hostname)
+    echo $(configValue "del(.logitech)|.[]|select(.hostname==\"${hostname}\")|key")
+}
+<<<<<<< HEAD
+
+
+=======
+
+
+>>>>>>> 296257d... Fixes
+switch() {
+    local source=$(getSource)
+    local target
+    if  [ "$#" -gt 0 ]; then
+        target=$(configValue "del(.logitech)|.${1}|key")
+    else
+        alternatives=$(configValue "del(.logitech)|del(.${source})|.[]|key")
+        if [ "$(echo $alternatives | wc -w)" -eq 1 ]; then 
+            target=${alternatives}
+        else
+            echo Please specific a target of one of: ${alternatives}
+            exit 9
+        fi
+    fi
+    switchEverything  "${source}" "${target}"
+}
+
+wakeCurrentExternalMonitor() {
+    local source=$(getSource)
+    local monitorId=$(configValue ".${source}.displays.external")
+    ${controlmymonitor} /TurnOn "${monitorId}"
+}
+
+if [ $# -eq 0 ]; then
+    switch
+elif [ "$1:" == "wake" ]; then
+    wakeCurrentExternalMonitor
+elif [ "$1" == "switch" ]; then
+    switch
 fi
 
 
-if  [ "$#" -gt 0 ]; then
-    if [[ "$1" == 'home' ]]; then
-        target=home
-    elif [[ "$1" == 'work' ]]; then
-        target=work
-    else 
-        echo Invalid target '$1'
-        exit -1
-    fi
-else
-    if [[ "${source}" == "home" ]]; then
-        target=work
-    elif [[ "${source}" == "work" ]]; then
-        target=home
-    fi
-fi
 
-switchEverything "${source}" "${target}"

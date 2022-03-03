@@ -1,5 +1,5 @@
-logitechCommon:
-  receiver:
+logitech: &logitechCommon
+  receiver: &logitechReceiver
     vid: 046D
     pid: C52B
     channel: '0x01'
@@ -11,21 +11,25 @@ logitechCommon:
     channelPrefix: '0x0a,0x1b'
 
 home:
+  hostname: evan-asus
   displays:
     laptop: MONITOR\SDC4143\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
     laptopTouchpad: MONITOR\BOE085F\{4d36e96e-e325-11ce-bfc1-08002be10318}\0002
     external: MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+    externalInputNumber: 4
   logitech:
+    <<: *logitechCommon
     receiver:
+      <<: *logitechReceiver
       channel: '0x00'
-    keyboardNumber: '0x01'
-    mouseNumber: '0x02'
 work:
+  hostname: 5CG1335TX4
   displays:
     laptop: MONITOR\IVO8C78\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
     external: MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
+    externalInputNumber: 3
   logitech:
+    <<: *logitechCommon
     receiver:
+      <<: *logitechReceiver
       channel: '0x01'
-    keyboardNumber: '0x01'
-    mouseNumber: '0x02'

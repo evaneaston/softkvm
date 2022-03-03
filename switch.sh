@@ -2,34 +2,33 @@
 set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+
+CONFIG=${SCRIPT_DIR}/config.yml
+
 hidapitester=${SCRIPT_DIR}/hidapitester.exe
 controlmymonitor=${SCRIPT_DIR}/ControlMyMonitor.exe
 
-RCVR_VID=046D
-RCVR_PID=C52B
+configValue() {
+    valu=`yq $1 ${CONFIG}`
+    if [[ "${valu}" == "null" ]]; then
+        echo "Missing value '$1' in ${CONFIG}"  >&2
+        exit -1
+    fi
+    echo "${valu}"
+}
 
-HOME_CHANNEL=0x00
-WORK_CHANNEL=0x01
 
-KEYBOARD_NUMBER=0x01
-MOUSE_NUMBER=0x02
+sendHidSwitchCommand() {
+    local deviceType=$1
+    local target=$2
 
-KEYBOARD_CHANNEL_PREFIX=0x09,0x1e
-MOUSE_CHANNEL_PREFIX=0x0a,0x1b
+    local vidpid=$(configValue .${target}.logitech.receiver.vid):$(configValue .${target}.logitech.receiver.pid)
+    local deviceNumber=$(configValue .${target}.logitech.${deviceType}.number)
+    local channelPrefix=$(configValue .${target}.logitech.${deviceType}.channelPrefix)
+    local receiverChannel=$(configValue .${target}.logitech.receiver.channel)
 
-# WORK_MONITOR_SERIAL_NUMBER=205NDEZ77508
-# #MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
-HOME_MONITOR=MONITOR\\GSM58C9\\{4d36e96e-e325-11ce-bfc1-08002be10318}\\0006
-WORK_MONITOR=205NDEZ77508
-HOME_MONITOR_INPUT_NUMBER=4
-WORK_MONITOR_INPUT_NUMBER=3
-
-sendHidCommand() {
-    deviceNumber=$1
-    channelPrefix=$2
-    receiverChannel=$3
     ${hidapitester} \
-        --vidpid ${RCVR_VID}:${RCVR_PID} \
+        --vidpid ${vidpid} \
         --usage 0x0001 \
         --usagePage 0xFF00 \
         --open \
@@ -37,20 +36,9 @@ sendHidCommand() {
         --send-output 0x10,${deviceNumber},${channelPrefix},${receiverChannel},0x00,0x00
 }
 
-switchKeyboardTo() {
-    channel=$1
-    sendHidCommand ${KEYBOARD_NUMBER} ${KEYBOARD_CHANNEL_PREFIX} ${channel}
-}
-
-switchMouseTo() {
-    channel=$1
-    sendHidCommand ${MOUSE_NUMBER} ${MOUSE_CHANNEL_PREFIX} ${channel}
-}
-
 switchDisplayTo() {
     displayId=$1
     inputNumber=$2
-    set -x
     ${controlmymonitor} /SetValue "${displayId}" 60 ${inputNumber}
 }
 
@@ -58,30 +46,13 @@ switchEverything() {
     source=$1
     target=$2
 
-    if [[ "$source" == "home" ]]; then
-        currentDisplay=${HOME_MONITOR}
-    elif [[ "${source}" == "work" ]]; then
-        currentDisplay=${WORK_MONITOR}
-    else
-        echo Invalid source \'${source}\'
-        exit -1
-    fi
-
-    if [[ "$target" == "home" ]]; then
-        channel=${HOME_CHANNEL}
-        displayInput=${HOME_MONITOR_INPUT_NUMBER}
-    elif [[ "$target" == "work" ]]; then
-        channel=${WORK_CHANNEL}
-        displayInput=${WORK_MONITOR_INPUT_NUMBER}
-    else
-        echo Invalid target "${target}"
-        exit -1
-    fi
+    currentDisplay=$(configValue .${source}.displays.external )
+    channel=$(configValue .${target}.logitech.receiver.channel )
+    displayInput=$(configValue .${target}.displays.externalInputNumber )
 
     echo Switching from \'${source}\' to \'${target}\'
-
-    switchKeyboardTo ${channel}
-    switchMouseTo ${channel}
+    sendHidSwitchCommand "keyboard" "$target"
+    sendHidSwitchCommand "mouse" "$target"
     switchDisplayTo "${currentDisplay}" "${displayInput}"
 }
 

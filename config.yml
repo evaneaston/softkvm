@@ -22,8 +22,8 @@ home:
     mouseNumber: '0x02'
 work:
   displays:
-    laptop: ''
-    external: MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+    laptop: MONITOR\IVO8C78\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
+    external: MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
   logitech:
     receiver:
       channel: '0x01'

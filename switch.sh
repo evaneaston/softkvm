@@ -13,9 +13,12 @@ MOUSE_NUMBER=0x02
 KEYBOARD_CHANNEL_PREFIX=0x09,0x1e
 MOUSE_CHANNEL_PREFIX=0x0a,0x1b
 
-usage() {
-    echo "Usage $0 {-f} {-v 4|6} hostname ipaddress\n\n  -f     FQDN only.  Sets registerNonQualified=false on the host record.  Defaults to true.\n  -v     4 or 6.  Defaults to 4.  Ignored by UDM firmware < 1.9.\n"
-}
+# WORK_MONITOR_SERIAL_NUMBER=205NDEZ77508
+# #MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
+# HOME_MONITOR_ID=MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+# WORK_MONITOR_SERIAL_NUMBER=205NDEZ77508
+HOME_MONITOR_INPUT_NUMBER=4
+WORK_MONITOR_INPUT_NUMBER=3
 
 sendHidCommand() {
     deviceNumber=$1
@@ -31,21 +34,58 @@ sendHidCommand() {
 }
 
 switchKeyboardTo() {
-   channel=$1
-   sendHidCommand ${KEYBOARD_NUMBER} ${KEYBOARD_CHANNEL_PREFIX} ${channel}
+    channel=$1
+    sendHidCommand ${KEYBOARD_NUMBER} ${KEYBOARD_CHANNEL_PREFIX} ${channel}
 }
 
 switchMouseTo() {
-   channel=$1
-   sendHidCommand ${MOUSE_NUMBER}    ${MOUSE_CHANNEL_PREFIX}    ${channel}
+    channel=$1
+    sendHidCommand ${MOUSE_NUMBER} ${MOUSE_CHANNEL_PREFIX} ${channel}
 }
 
+switchDisplayTo() {
+    displayId=$1
+    inputNumber=$2
+    ./ControlMyMonitor.exe  /SetValue ${displayId} 60 ${inputNumber}
+}
 
 switchTo() {
-    channel=$1
+    target=$1
+    if [[ "$target" == "home" ]]; then
+        channel=${HOME_CHANNEL}
+        # displayId=${WORK_DISPLAY}
+        displayInput=${HOME_MONITOR_INPUT_NUMBER}
+    elif [[ "$target" == "work" ]]; then
+        channel=${HOME_CHANNEL}
+        # displayId=${HOME_DISPLAY}
+        displayInput=${WORK_MONITOR_INPUT_NUMBER}
+    else
+        echo Invalid target ${target}
+        exit -1
+    fi
+
     switchKeyboardTo ${channel}
-    switchMouseTo ${channel}    
+    switchMouseTo ${channel}
+    switchDisplayTo "205NDEZ77508" "${displayInput}"
 }
 
-switchTo ${WORK_CHANNEL}
+if  [ "$#" -gt 0 ]; then
+    if [[ "$1" =~ '(home|work)' ]]; then
+        target=$1
+    else 
+        echo Invalid target '$1'
+        exit -1
+    fi
+else
+    host=$(hostname)
+    if [[ "${host}" == "5CG1335TX4" ]]; then
+        target=home
+    elif [[ "${host}" == "evan-asus" ]]; then
+        target=work
+    else
+        echo Unable to determine host to switch to automatically. 
+        exit -1
+    fi
+fi
 
+switchTo ${target}

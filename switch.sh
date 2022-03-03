@@ -15,7 +15,7 @@ MOUSE_CHANNEL_PREFIX=0x0a,0x1b
 
 # WORK_MONITOR_SERIAL_NUMBER=205NDEZ77508
 # #MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
-HOME_MONITOR=MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+HOME_MONITOR=MONITOR\\GSM58C9\\{4d36e96e-e325-11ce-bfc1-08002be10318}\\0006
 WORK_MONITOR=205NDEZ77508
 HOME_MONITOR_INPUT_NUMBER=4
 WORK_MONITOR_INPUT_NUMBER=3
@@ -46,7 +46,8 @@ switchMouseTo() {
 switchDisplayTo() {
     displayId=$1
     inputNumber=$2
-    ./ControlMyMonitor.exe  /SetValue ${displayId} 60 ${inputNumber}
+    set -x
+    ./ControlMyMonitor.exe  /SetValue "${displayId}" 60 ${inputNumber}
 }
 
 switchEverything() {

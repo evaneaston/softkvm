@@ -64,8 +64,10 @@ switchEverything() {
 
     if [[ "$target" == "home" ]]; then
         channel=${HOME_CHANNEL}
+        displayInput=${HOME_MONITOR_INPUT_NUMBER}
     elif [[ "$target" == "work" ]]; then
         channel=${WORK_CHANNEL}
+        displayInput=${WORK_MONITOR_INPUT_NUMBER}
     else
         echo Invalid target "${target}"
         exit -1

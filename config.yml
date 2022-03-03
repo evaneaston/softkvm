@@ -1,0 +1,31 @@
+logitechCommon:
+  receiver:
+    vid: 046D
+    pid: C52B
+    channel: '0x01'
+  keyboard:
+    number: '0x01'
+    channelPrefix: '0x09,0x1e'
+  mouse:
+    number: '0x02'
+    channelPrefix: '0x0a,0x1b'
+
+home:
+  displays:
+    laptop: MONITOR\SDC4143\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
+    laptopTouchpad: MONITOR\BOE085F\{4d36e96e-e325-11ce-bfc1-08002be10318}\0002
+    external: MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+  logitech:
+    receiver:
+      channel: '0x00'
+    keyboardNumber: '0x01'
+    mouseNumber: '0x02'
+work:
+  displays:
+    laptop: ''
+    external: MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+  logitech:
+    receiver:
+      channel: '0x01'
+    keyboardNumber: '0x01'
+    mouseNumber: '0x02'

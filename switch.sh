@@ -15,8 +15,8 @@ MOUSE_CHANNEL_PREFIX=0x0a,0x1b
 
 # WORK_MONITOR_SERIAL_NUMBER=205NDEZ77508
 # #MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
-# HOME_MONITOR_ID=MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
-# WORK_MONITOR_SERIAL_NUMBER=205NDEZ77508
+HOME_MONITOR=MONITOR\GSM58C9\{4d36e96e-e325-11ce-bfc1-08002be10318}\0006
+WORK_MONITOR=205NDEZ77508
 HOME_MONITOR_INPUT_NUMBER=4
 WORK_MONITOR_INPUT_NUMBER=3
 
@@ -49,43 +49,63 @@ switchDisplayTo() {
     ./ControlMyMonitor.exe  /SetValue ${displayId} 60 ${inputNumber}
 }
 
-switchTo() {
-    target=$1
-    if [[ "$target" == "home" ]]; then
-        channel=${HOME_CHANNEL}
-        # displayId=${WORK_DISPLAY}
-        displayInput=${HOME_MONITOR_INPUT_NUMBER}
-    elif [[ "$target" == "work" ]]; then
-        channel=${HOME_CHANNEL}
-        # displayId=${HOME_DISPLAY}
-        displayInput=${WORK_MONITOR_INPUT_NUMBER}
+switchEverything() {
+    source=$1
+    target=$2
+
+    if [[ "$source" == "home" ]]; then
+        currentDisplay=${HOME_MONITOR}
+    elif [[ "${source}" == "work" ]]; then
+        currentDisplay=${WORK_MONITOR}
     else
-        echo Invalid target ${target}
+        echo Invalid source \'${source}\'
         exit -1
     fi
 
+    if [[ "$target" == "home" ]]; then
+        channel=${HOME_CHANNEL}
+        displayInput=${HOME_MONITOR_INPUT_NUMBER}
+    elif [[ "$target" == "work" ]]; then
+        channel=${HOME_CHANNEL}
+        displayInput=${WORK_MONITOR_INPUT_NUMBER}
+    else
+        echo Invalid target "${target}"
+        exit -1
+    fi
+
+    echo Switching from \'${source}\' to \'${target}\'
+
     switchKeyboardTo ${channel}
     switchMouseTo ${channel}
-    switchDisplayTo "205NDEZ77508" "${displayInput}"
+    switchDisplayTo "${currentDisplay}" "${displayInput}"
 }
 
+host=$(hostname)
+if [[ "${host}" == "5CG1335TX4" ]]; then
+    source=work
+elif [[ "${host}" == "evan-asus" ]]; then
+    source=home
+else
+    echo Unable to determine host to switch to automatically. 
+    exit -1
+fi
+
+
 if  [ "$#" -gt 0 ]; then
-    if [[ "$1" =~ '(home|work)' ]]; then
-        target=$1
+    if [[ "$1" == 'home' ]]; then
+        target=home
+    elif [[ "$1" == 'work' ]]; then
+        target=work
     else 
         echo Invalid target '$1'
         exit -1
     fi
 else
-    host=$(hostname)
-    if [[ "${host}" == "5CG1335TX4" ]]; then
-        target=home
-    elif [[ "${host}" == "evan-asus" ]]; then
+    if [[ "${source}" == "home" ]]; then
         target=work
-    else
-        echo Unable to determine host to switch to automatically. 
-        exit -1
+    elif [[ "${source}" == "work" ]]; then
+        target=home
     fi
 fi
 
-switchTo ${target}
+switchEverything "${source}" "${target}"

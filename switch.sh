@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+hidapitester=${SCRIPT_DIR}/hidapitester.exe
+controlmymonitor=${SCRIPT_DIR}/ControlMyMonitor.exe
 
 RCVR_VID=046D
 RCVR_PID=C52B
@@ -24,7 +28,7 @@ sendHidCommand() {
     deviceNumber=$1
     channelPrefix=$2
     receiverChannel=$3
-    ./hidapitester.exe \
+    ${hidapitester} \
         --vidpid ${RCVR_VID}:${RCVR_PID} \
         --usage 0x0001 \
         --usagePage 0xFF00 \
@@ -47,7 +51,7 @@ switchDisplayTo() {
     displayId=$1
     inputNumber=$2
     set -x
-    ./ControlMyMonitor.exe  /SetValue "${displayId}" 60 ${inputNumber}
+    ${controlmymonitor} /SetValue "${displayId}" 60 ${inputNumber}
 }
 
 switchEverything() {

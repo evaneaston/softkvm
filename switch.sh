@@ -7,6 +7,33 @@ CONFIG=${SCRIPT_DIR}/config.yml
 hidapitester=${SCRIPT_DIR}/hidapitester.exe
 controlmymonitor=${SCRIPT_DIR}/ControlMyMonitor.exe
 
+verifyExecutablePresent() {
+    local cmd=$1
+    if which $1 > /dev/null ; then
+        echo "Prerequisite $1 is present."
+    else
+        echo "Prerequisite $1 is not present.  Install it." >&2
+        exit 1;
+    fi
+}
+
+verifyYq() {
+    # install with  go install github.com/mikefarah/yq/v4@latest
+    verifyExecutablePresent yq
+
+    YQ_VERSION=$(yq --version)
+    YQ_MAJOR_VERSION=$(echo "${YQ_VERSION}" | sed -r -e "s:.*version\s([0-9]+)\..*:\1:")
+    if [[ ! $(echo ${YQ_MAJOR_VERSION} | grep -E "^[0-9+]$" ) ]]; then
+        echo "version in unexpected format: '${YQ_VERSION}'"
+        exit 3
+    fi
+
+    if (( "$YQ_MAJOR_VERSION" < 4 )); then
+        echo "yq must be at least at version 4, is '${YQ_VERSION}'"
+        exit 2
+    fi
+}
+
 configValue() {
     # yq config.yml -o json |  jq 'del(.logitech)'
     local value=`yq "$1" ${CONFIG}`
@@ -62,13 +89,7 @@ getSource() {
     local hostname=$(hostname)
     echo $(configValue "del(.logitech)|.[]|select(.hostname==\"${hostname}\")|key")
 }
-<<<<<<< HEAD
 
-
-=======
-
-
->>>>>>> 296257d... Fixes
 switch() {
     local source=$(getSource)
     local target
@@ -92,6 +113,9 @@ wakeCurrentExternalMonitor() {
     ${controlmymonitor} /TurnOn "${monitorId}"
 }
 
+verifyExecutablePresent sed
+verifyYq
+
 if [ $# -eq 0 ]; then
     switch
 elif [ "$1:" == "wake" ]; then
@@ -99,6 +123,4 @@ elif [ "$1:" == "wake" ]; then
 elif [ "$1" == "switch" ]; then
     switch
 fi
-
-
 

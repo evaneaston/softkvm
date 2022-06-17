@@ -23,7 +23,7 @@ home:
       <<: *logitechReceiver
       channel: '0x00'
 work:
-  hostname: 5CG1335TX4
+  hostname: eeaston-archd
   displays:
     laptop: MONITOR\IVO8C78\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
     external: MONITOR\GSM58C8\{4d36e96e-e325-11ce-bfc1-08002be10318}\0003
